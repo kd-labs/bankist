@@ -73,11 +73,10 @@ const currencies = new Map([
 
 const movements = [200, 450, -400, 3000, -650, -130, 70, 1300];
 
+/******************To Render the movement of money*******************/
+
 // function to display the transaction movements in account
 const displayMovements = function (movements) {
-  // clearing the html of root element
-  containerMovements.innerHTML = '';
-
   // for-each on movements array
   movements.forEach(function (money, i) {
     // for-each on array takes a callback fn which takes the element and
@@ -115,22 +114,176 @@ const displayMovements = function (movements) {
   });
 };
 
-displayMovements(account1.movements);
+// displayMovements(account1.movements);
 
-// const usernames = accounts.map(function (account) {
-//   account.owner.split(' ').reduce((prev, curr) => {
-//     console.log(prev, curr);
-//     prev = curr.charAt(0);
-//     console.log(prev);
-//   }, '');
-// });
+/**********************************************************************/
 
-const username = account1.owner.split(' ').reduce((prev, curr) => {
-  console.log(prev, curr);
-  prev = prev.concat(curr.charAt(0));
-  console.log(prev);
-}, '1');
+/*********************CREATING USERNAMES ******************************/
 
-console.log(username);
+/*
+  1. Map Fn : Transforming owner of each account.
+  2. Split Fn : To split the owner of the account.
+  3. Reduce Fn : To reduce the owner of the account to their initials
+      Syntax for reduce fn :
+          list.reduct(function(prevVal, currEl) {
+              // Reduction Logic to add currEl to prevVal
+              return (combining currEl into prevVal) 
+          }, initialVal);
+*/
+
+const ownerNames = accounts.map(function (account) {
+  return account.owner
+    .toLowerCase()
+    .split(' ')
+    .reduce((initials, name) => {
+      return initials.concat(name.charAt(0));
+    }, '');
+});
+console.log(ownerNames);
+
+accounts.forEach(function (account) {
+  account.username = account.owner
+    .toLowerCase()
+    .split(' ')
+    .reduce((prevVal, currEl) => {
+      return prevVal.concat(currEl.charAt(0));
+    }, '');
+});
+
+console.log(accounts);
+
+/**********************************************************************/
+
+/*********************CALCULATING SUMMARIES ***************************/
+
+const calcBalance = function (account) {
+  const balance = account.movements.reduce((sum, val) => (sum += val), 0);
+  account.balance = balance;
+  labelBalance.textContent = `${balance} €`;
+};
+
+const calcDeposit = function (movements) {
+  const deposit = movements
+    .filter(money => money >= 0)
+    .reduce((sum, amount) => (sum += amount), 0);
+  labelSumIn.textContent = `${deposit} €`;
+};
+
+const calcWithdrawal = function (movements) {
+  const withdrawal = movements
+    .filter(money => money < 0)
+    .reduce((sum, amount) => (sum += amount), 0);
+  labelSumOut.textContent = `${-withdrawal} €`;
+};
+
+const calcInterest = function (account) {
+  const interest = account.movements
+    .filter(x => x >= 0)
+    .map(function (val) {
+      return (val * account.interestRate) / 100;
+    })
+    .reduce((sum, val) => (sum += val), 0);
+  console.log(`Interest earned on deposits : ${interest}`);
+  labelSumInterest.textContent = interest;
+};
+
+const calcDisplaySummary = function (account) {
+  calcBalance(account);
+  calcDeposit(account.movements);
+  calcWithdrawal(account.movements);
+  calcInterest(account);
+};
+
+// calcDisplaySummary(account1);
+
+/**********************************************************************/
+
+/****************IMPLEMENTING LOGIN FUNCTIONALITY *********************/
+
+// clearing the html of root element
+containerMovements.innerHTML = '';
+let loggedAccount;
+
+btnLogin.addEventListener('click', function (event) {
+  event.preventDefault();
+  const enteredUsername = inputLoginUsername.value;
+  const enteredPin = inputLoginPin.value;
+
+  // Check if enteredUsername and enteredPin are truthy values
+  if (enteredUsername && enteredPin) {
+    // Find the matching account
+    loggedAccount = accounts.find(
+      account =>
+        account.username === enteredUsername &&
+        account.pin === Number(enteredPin)
+    );
+
+    !loggedAccount && console.log('Invalid login');
+
+    if (loggedAccount) {
+      // Clear the input fields and take away the focus
+      inputLoginUsername.value = '';
+      inputLoginPin.value = '';
+
+      inputLoginUsername.blur();
+      inputLoginPin.blur();
+
+      // Call function to display movement, balance, deposit, withdrawal, interest and welcome user
+
+      labelWelcome.textContent = `Welcome back ${
+        loggedAccount.owner.split(' ')[0]
+      }`;
+      calcDisplaySummary(loggedAccount);
+      displayMovements(loggedAccount.movements);
+
+      // Remove the opacity so movement and summaries can be displayed
+      containerApp.style.opacity = 100;
+    }
+  }
+});
+
+/**********************************************************************/
+
+/****************IMPLEMENTING TRANSFER FUNCTIONALITY ******************/
+
+//Adding event listener to click event to transfer button
+btnTransfer.addEventListener('click', function (event) {
+  // preventing default reload behaviour on form submission
+  event.preventDefault();
+
+  const transferTo = inputTransferTo.value;
+  const transferAmount = Number(inputTransferAmount.value);
+
+  // find fn to find the recipient account
+  const transferToAccount = accounts.find(
+    account => account.username === transferTo
+  );
+
+  // checking if recipient account is valid and the transferred amount is less than equal to balance of loggedAccount
+  if (
+    transferToAccount?.username !== loggedAccount.username &&
+    transferAmount > 0 &&
+    loggedAccount.balance >= transferAmount
+  ) {
+    // pushing a positive transfer i.e. deposit to recipient's movements
+    transferToAccount.movements.push(transferAmount);
+    // pushing a negative transfer i.e. withdrawal to loggedUser's movements
+    loggedAccount.movements.push(-transferAmount);
+
+    // calling calcDisplaySummary() and displayMovement for current
+    // account after transfer
+    calcDisplaySummary(loggedAccount);
+    displayMovements(loggedAccount.movements);
+  } else {
+    console.log('Invalid Recipient or balance not enough');
+  }
+  // resetting the transfer form
+  inputTransferAmount.value = '';
+  inputTransferTo.value = '';
+  inputTransferTo.blur();
+  inputTransferAmount.blur();
+});
+
+/**********************************************************************/
 
 /////////////////////////////////////////////////
