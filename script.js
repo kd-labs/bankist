@@ -286,4 +286,58 @@ btnTransfer.addEventListener('click', function (event) {
 
 /**********************************************************************/
 
+/************************* ARRAYS PRACTICE ****************************/
+
+console.log('Arrays Practice Exercises Begins');
+
+/******** Task 1 : Calculate all Deposits ************/
+
+const allDeposits = accounts
+  .flatMap(function (account) {
+    return account.movements.filter(mov => mov > 0);
+  })
+  .reduce((sum, deposit) => (sum += deposit), 0);
+
+console.log(`all Deposits in bank : ${allDeposits}`);
+
+/****************************************************/
+
+/******** Task 2 : Count Deposits >= 1000 ************/
+
+// Approach 1 : Using length property
+const atLeast1000DepositsCount1 = accounts.flatMap(function (account) {
+  return account.movements.filter(mov => mov >= 1000);
+}).length;
+
+// Approach 2 : Using reduce method
+const atLeast1000DepositsCount2 = accounts
+  .flatMap(function (account) {
+    return account.movements.filter(mov => mov >= 1000);
+  })
+  .reduce((count, val) => (count += 1), 0);
+
+console.log(
+  `Count of deposits at least 1000 in bank : ${atLeast1000DepositsCount2}`
+);
+
+/****************************************************/
+
+/**** Task 3 : Create object containing deposits and withdrawal using reduce ********/
+
+const { deposits, withdrawals } = accounts
+  .flatMap(account => account.movements)
+  .reduce(
+    (sums, currVal) => {
+      currVal > 0 ? (sums.deposits += currVal) : (sums.withdrawals += -currVal);
+      return sums;
+    },
+    { deposits: 0, withdrawals: 0 }
+  );
+
+console.log(
+  `All deposits and withdrawals in bank : ${deposits} , ${withdrawals}`
+);
+
+/****************************************************/
+
 /////////////////////////////////////////////////
