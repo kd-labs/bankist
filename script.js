@@ -6,28 +6,28 @@
 
 // Data
 const account1 = {
-  owner: 'Jonas Schmedtmann',
+  owner: 'Kunal Das',
   movements: [200, 450, -400, 3000, -650, -130, 70, 1300],
   interestRate: 1.2, // %
   pin: 1111,
 };
 
 const account2 = {
-  owner: 'Jessica Davis',
+  owner: 'Jaya Das',
   movements: [5000, 3400, -150, -790, -3210, -1000, 8500, -30],
   interestRate: 1.5,
   pin: 2222,
 };
 
 const account3 = {
-  owner: 'Steven Thomas Williams',
+  owner: 'Madhurima Das',
   movements: [200, -200, 340, -300, -20, 50, 400, -460],
   interestRate: 0.7,
   pin: 3333,
 };
 
 const account4 = {
-  owner: 'Sarah Smith',
+  owner: 'Mrinal Kanti Das',
   movements: [430, 1000, 700, 50, 90],
   interestRate: 1,
   pin: 4444,
@@ -73,6 +73,12 @@ const currencies = new Map([
 
 const movements = [200, 450, -400, 3000, -650, -130, 70, 1300];
 
+/********************* GLOBAL VARIABLES SECTION *********************/
+
+let loggedAccount;
+
+/**********************************************************************/
+
 /******************To Render the movement of money*******************/
 
 // function to display the transaction movements in account
@@ -110,7 +116,7 @@ const displayMovements = function (movements) {
          relative to root element
     */
     containerMovements.insertAdjacentHTML('afterbegin', htmlElement);
-    console.log(money, i, movementType);
+    // console.log(money, i, movementType);
   });
 };
 
@@ -194,6 +200,11 @@ const calcDisplaySummary = function (account) {
   calcInterest(account);
 };
 
+const updateUI = function (account) {
+  displayMovements(account.movements);
+  calcDisplaySummary(account);
+};
+
 // calcDisplaySummary(account1);
 
 /**********************************************************************/
@@ -202,7 +213,6 @@ const calcDisplaySummary = function (account) {
 
 // clearing the html of root element
 containerMovements.innerHTML = '';
-let loggedAccount;
 
 btnLogin.addEventListener('click', function (event) {
   event.preventDefault();
@@ -233,8 +243,7 @@ btnLogin.addEventListener('click', function (event) {
       labelWelcome.textContent = `Welcome back ${
         loggedAccount.owner.split(' ')[0]
       }`;
-      calcDisplaySummary(loggedAccount);
-      displayMovements(loggedAccount.movements);
+      updateUI(loggedAccount);
 
       // Remove the opacity so movement and summaries can be displayed
       containerApp.style.opacity = 100;
@@ -272,8 +281,7 @@ btnTransfer.addEventListener('click', function (event) {
 
     // calling calcDisplaySummary() and displayMovement for current
     // account after transfer
-    calcDisplaySummary(loggedAccount);
-    displayMovements(loggedAccount.movements);
+    updateUI(loggedAccount);
   } else {
     console.log('Invalid Recipient or balance not enough');
   }
@@ -282,6 +290,34 @@ btnTransfer.addEventListener('click', function (event) {
   inputTransferTo.value = '';
   inputTransferTo.blur();
   inputTransferAmount.blur();
+});
+
+/**********************************************************************/
+
+/****************IMPLEMENTING LOAN FUNCTIONALITY ******************/
+
+// add event listener to to loan request button
+btnLoan.addEventListener('click', function (event) {
+  // preventing default behavior of form
+  event.preventDefault();
+  const loanAmount = Number(inputLoanAmount.value);
+
+  // Some Fn : Checking if some elements in movements array are greater than
+  // 10% of requested amount
+
+  setTimeout(function () {
+    const loanRequestValid =
+      loggedAccount.movements
+        .filter(mov => mov > 0)
+        .some(mov => mov > 0.1 * loanAmount) &&
+      loggedAccount.movements.push(loanAmount);
+
+    updateUI(loggedAccount);
+    console.log(`Loan Amount ${loanAmount} approved`);
+  }, 3000);
+
+  inputLoanAmount.value = '';
+  inputLoanAmount.blur();
 });
 
 /**********************************************************************/
