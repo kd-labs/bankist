@@ -188,7 +188,8 @@ const calcInterest = function (account) {
     .map(function (val) {
       return (val * account.interestRate) / 100;
     })
-    .reduce((sum, val) => (sum += val), 0);
+    .reduce((sum, val) => (sum += val), 0)
+    .toFixed(2);
   console.log(`Interest earned on deposits : ${interest}`);
   labelSumInterest.textContent = interest;
 };
