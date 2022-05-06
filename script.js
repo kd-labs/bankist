@@ -1,7 +1,5 @@
 'use strict';
 
-/////////////////////////////////////////////////
-/////////////////////////////////////////////////
 // BANKIST APP
 
 // Data
@@ -61,6 +59,8 @@ const inputLoanAmount = document.querySelector('.form__input--loan-amount');
 const inputCloseUsername = document.querySelector('.form__input--user');
 const inputClosePin = document.querySelector('.form__input--pin');
 
+const logoutTimerEl = document.querySelector('.logout-timer');
+
 /////////////////////////////////////////////////
 /////////////////////////////////////////////////
 // LECTURES
@@ -75,7 +75,14 @@ const movements = [200, 450, -400, 3000, -650, -130, 70, 1300];
 
 /********************* GLOBAL VARIABLES SECTION *********************/
 
-let loggedAccount;
+let loggedAccount, logoutTimer;
+
+/**********************************************************************/
+
+/***************** GLOBAL EXECUTION CONTEXT CODE ********************/
+// clearing the html of root element
+containerMovements.innerHTML = '';
+logoutTimerEl.style.display = 'none';
 
 /**********************************************************************/
 
@@ -212,9 +219,6 @@ const updateUI = function (account) {
 
 /****************IMPLEMENTING LOGIN FUNCTIONALITY *********************/
 
-// clearing the html of root element
-containerMovements.innerHTML = '';
-
 btnLogin.addEventListener('click', function (event) {
   event.preventDefault();
   const enteredUsername = inputLoginUsername.value;
@@ -232,7 +236,7 @@ btnLogin.addEventListener('click', function (event) {
     !loggedAccount && console.log('Invalid login');
 
     if (loggedAccount) {
-      // Clear the input fields and take away the focus
+      // Clear the input fields and take away the focus from them
       inputLoginUsername.value = '';
       inputLoginPin.value = '';
 
@@ -241,6 +245,7 @@ btnLogin.addEventListener('click', function (event) {
 
       // Call function to display movement, balance, deposit, withdrawal, interest and welcome user
 
+      logoutTimerEl.style.display = '';
       labelWelcome.textContent = `Welcome back ${
         loggedAccount.owner.split(' ')[0]
       }`;
@@ -248,9 +253,43 @@ btnLogin.addEventListener('click', function (event) {
 
       // Remove the opacity so movement and summaries can be displayed
       containerApp.style.opacity = 100;
+      if (logoutTimer) clearInterval(logoutTimer);
+      logoutTimer = startTimer();
     }
   }
 });
+
+/**********************************************************************/
+
+/****************IMPLEMENTING LOGOUT FUNCTIONALITY *********************/
+
+const startTimer = function () {
+  let time = 120;
+
+  // creating function which counts down the timer
+  const tick = function () {
+    const min = String(Math.trunc(time / 60)).padStart(2, 0);
+    const sec = String(time % 60).padStart(2, 0);
+
+    labelTimer.textContent = `${min}:${sec}`;
+
+    if (time === 0) {
+      /* 
+        Logout the user
+        By making the opacity to 0 and making the welcome message back to initial value
+        clear logout timer 
+      */
+      clearInterval(logoutTimer);
+      labelWelcome.textContent = 'Login to get started';
+      containerApp.style.opacity = 0;
+    }
+
+    time--;
+  };
+  tick();
+  const logoutTimer = setInterval(tick, 1000);
+  return logoutTimer;
+};
 
 /**********************************************************************/
 
@@ -283,6 +322,11 @@ btnTransfer.addEventListener('click', function (event) {
     // calling calcDisplaySummary() and displayMovement for current
     // account after transfer
     updateUI(loggedAccount);
+
+    // clear previous existing timer
+    if (logoutTimer) clearInterval(logoutTimer);
+    // start new timer and return timer id
+    logoutTimer = startTimer();
   } else {
     console.log('Invalid Recipient or balance not enough');
   }
@@ -317,6 +361,8 @@ btnLoan.addEventListener('click', function (event) {
     console.log(`Loan Amount ${loanAmount} approved`);
   }, 3000);
 
+  if (logoutTimer) clearInterval(logoutTimer);
+  logoutTimer = startTimer();
   inputLoanAmount.value = '';
   inputLoanAmount.blur();
 });
